@@ -1,5 +1,5 @@
 import React from 'react';
-import { TrendingUp, Menu, X, LayoutDashboard, PlusCircle, CreditCard, History, Bot, LogOut } from 'lucide-react';
+import { TrendingUp, Menu, X, LayoutDashboard, PlusCircle, CreditCard, History, Bot, LogOut, Brain } from 'lucide-react';
 import { AppView } from '../types';
 
 interface NavbarProps {
@@ -49,6 +49,7 @@ const Navbar: React.FC<NavbarProps> = ({ currentView, setCurrentView, isLoggedIn
                   <NavItem view={AppView.DASHBOARD} icon={LayoutDashboard} label="Dashboard" />
                   <NavItem view={AppView.TRANSACTIONS} icon={PlusCircle} label="Transactions" />
                   <NavItem view={AppView.SUBSCRIPTIONS} icon={CreditCard} label="Subscriptions" />
+                  <NavItem view={AppView.REFLECT} icon={Brain} label="Reflect" />
                   <NavItem view={AppView.HISTORY} icon={History} label="History" />
                   <NavItem view={AppView.COACH} icon={Bot} label="AI Coach" />
                   <div className="h-6 w-px bg-gray-700 mx-2"></div>
@@ -94,6 +95,7 @@ const Navbar: React.FC<NavbarProps> = ({ currentView, setCurrentView, isLoggedIn
                   <button onClick={() => handleNav(AppView.DASHBOARD)} className="text-gray-300 hover:text-white block px-3 py-2 rounded-md text-base font-medium w-full text-left">Dashboard</button>
                   <button onClick={() => handleNav(AppView.TRANSACTIONS)} className="text-gray-300 hover:text-white block px-3 py-2 rounded-md text-base font-medium w-full text-left">Transactions</button>
                   <button onClick={() => handleNav(AppView.SUBSCRIPTIONS)} className="text-gray-300 hover:text-white block px-3 py-2 rounded-md text-base font-medium w-full text-left">Subscriptions</button>
+                  <button onClick={() => handleNav(AppView.REFLECT)} className="text-gray-300 hover:text-white block px-3 py-2 rounded-md text-base font-medium w-full text-left">Reflect</button>
                   <button onClick={() => handleNav(AppView.HISTORY)} className="text-gray-300 hover:text-white block px-3 py-2 rounded-md text-base font-medium w-full text-left">History</button>
                   <button onClick={() => handleNav(AppView.COACH)} className="text-gray-300 hover:text-white block px-3 py-2 rounded-md text-base font-medium w-full text-left">AI Coach</button>
                   <button onClick={onLogout} className="text-red-400 hover:text-red-300 block px-3 py-2 rounded-md text-base font-medium w-full text-left">Logout</button>

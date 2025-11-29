@@ -8,6 +8,7 @@ export enum AppView {
   DASHBOARD = 'DASHBOARD',
   TRANSACTIONS = 'TRANSACTIONS',
   SUBSCRIPTIONS = 'SUBSCRIPTIONS',
+  REFLECT = 'REFLECT',
   HISTORY = 'HISTORY',
   COACH = 'COACH'
 }
@@ -45,6 +46,17 @@ export interface Subscription {
   billing_cycle: 'monthly' | 'six_months' | 'yearly';
   active: boolean;
   provider_icon?: string; 
+}
+
+export interface ReflectionItem {
+  id: number;
+  user_id: number;
+  name: string;
+  cost: number;
+  startTime: number;
+  durationMinutes: number;
+  endTime: number;
+  status: 'pending' | 'purchased' | 'skipped';
 }
 
 export interface BudgetCategoryHealth {

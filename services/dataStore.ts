@@ -1,4 +1,4 @@
-import { User, Transaction, OnboardingData, DashboardStats, Subscription, BudgetHealth } from '../types';
+import { User, Transaction, OnboardingData, DashboardStats, Subscription, BudgetHealth, ReflectionItem } from '../types';
 
 // Keys for localStorage
 const KEYS = {
@@ -6,6 +6,7 @@ const KEYS = {
   PROFILES: 'moneo_profiles',
   TRANSACTIONS: 'moneo_transactions',
   SUBSCRIPTIONS: 'moneo_subscriptions',
+  REFLECTIONS: 'moneo_reflections',
   SESSION: 'moneo_session'
 };
 
@@ -181,6 +182,47 @@ export const dataStore = {
           return sub;
       }
       throw new Error("Subscription not found");
+  },
+
+  // --- Reflection / Mindful Spending ---
+  addReflection: async (item: { name: string; cost: number; durationMinutes: number }) => {
+    const userId = JSON.parse(localStorage.getItem(KEYS.SESSION) || 'null');
+    if (!userId) throw new Error("Not authenticated");
+
+    const reflections = JSON.parse(localStorage.getItem(KEYS.REFLECTIONS) || '[]');
+    const now = Date.now();
+    const newItem: ReflectionItem = {
+      id: now,
+      user_id: userId,
+      name: item.name,
+      cost: item.cost,
+      startTime: now,
+      durationMinutes: item.durationMinutes,
+      endTime: now + (item.durationMinutes * 60 * 1000),
+      status: 'pending'
+    };
+    
+    reflections.push(newItem);
+    localStorage.setItem(KEYS.REFLECTIONS, JSON.stringify(reflections));
+    return newItem;
+  },
+
+  getReflections: () => {
+    const userId = JSON.parse(localStorage.getItem(KEYS.SESSION) || 'null');
+    if (!userId) return [];
+    
+    const reflections = JSON.parse(localStorage.getItem(KEYS.REFLECTIONS) || '[]');
+    // Return items for user
+    return reflections.filter((r: ReflectionItem) => r.user_id === userId);
+  },
+
+  resolveReflection: (id: number, decision: 'purchased' | 'skipped') => {
+    const reflections = JSON.parse(localStorage.getItem(KEYS.REFLECTIONS) || '[]');
+    const index = reflections.findIndex((r: ReflectionItem) => r.id === id);
+    if (index > -1) {
+      reflections[index].status = decision;
+      localStorage.setItem(KEYS.REFLECTIONS, JSON.stringify(reflections));
+    }
   },
 
   // --- Transactions ---

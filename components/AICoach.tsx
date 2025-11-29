@@ -2,13 +2,14 @@ import React, { useState, useRef, useEffect } from 'react';
 import { Send, Bot, Sparkles, User as UserIcon } from 'lucide-react';
 import { ChatMessage } from '../types';
 import { dataStore } from '../services/dataStore';
+import { getFinancialAdvice } from '../services/geminiService';
 
 const AICoach: React.FC = () => {
   const [messages, setMessages] = useState<ChatMessage[]>([
     {
       id: '1',
       role: 'model',
-      text: "Namaste! I'm MONEO, your personal finance coach. I can see your spending patterns. Ask me anything!",
+      text: "Hello. I am MONEO, your finance strategist. I have analyzed your current financial data. How may I assist you today?",
       timestamp: new Date()
     }
   ]);
@@ -23,44 +24,6 @@ const AICoach: React.FC = () => {
   useEffect(() => {
     scrollToBottom();
   }, [messages]);
-
-  const generateLocalAdvice = async (msg: string) => {
-    // Simulate AI thinking delay
-    await new Promise(r => setTimeout(r, 1000));
-
-    const stats = await dataStore.getDashboardStats();
-    
-    // Check for stress indicators
-    const isStressed = 
-        stats.budget_health.essentials.status === 'exceeded' ||
-        stats.budget_health.lifestyle.status === 'exceeded' ||
-        stats.budget_health.savings.status === 'behind';
-
-    const lowerMsg = msg.toLowerCase();
-
-    // Contextual Preambles based on Stress
-    const stressPreamble = isStressed 
-        ? "I know finances can feel overwhelming right now, but we can fix this together. 💙 " 
-        : "";
-
-    if (lowerMsg.includes('save') || lowerMsg.includes('saving')) {
-        return `${stressPreamble}Based on your current data, you have saved ₹${stats.savings}. To improve, try the 50-30-20 rule: 50% needs, 30% wants, 20% savings. small steps matter!`;
-    }
-    if (lowerMsg.includes('spend') || lowerMsg.includes('expense')) {
-        return `${stressPreamble}You have spent ₹${stats.expense} this month. If you're feeling stressed about this, let's look at your biggest category together.`;
-    }
-    if (lowerMsg.includes('budget')) {
-        return `${stressPreamble}Your income is ₹${stats.income}. Ideally, keep expenses under ₹${stats.income * 0.8}. If you're over that, don't panic—just adjust one category at a time.`;
-    }
-    if (lowerMsg.includes('invest')) {
-        return "For beginners in India, consider safe options like RDs or Index Funds. But first, ensure you have a 6-month emergency fund for peace of mind.";
-    }
-    if (lowerMsg.includes('sad') || lowerMsg.includes('stressed') || lowerMsg.includes('worried')) {
-        return "I hear you. Money stress is real and valid. Remember, your worth isn't your net worth. Let's take a deep breath and find one small win today.";
-    }
-
-    return `${stressPreamble}That's a great question. Focus on tracking every expense, and I'll help you navigate this journey step by step. You've got this!`;
-  };
 
   const handleSend = async (text: string) => {
     if (!text.trim()) return;
@@ -77,7 +40,19 @@ const AICoach: React.FC = () => {
     setIsThinking(true);
 
     try {
-      const responseText = await generateLocalAdvice(text);
+      // 1. Gather Context Data
+      const [stats, subscriptions, userProfile] = await Promise.all([
+        dataStore.getDashboardStats(),
+        dataStore.getSubscriptions(),
+        dataStore.getCurrentUser() // Using user basic info, profile is fetched within getDashboardStats usually, but we pass basic user here
+      ]);
+
+      // 2. Call Gemini Service
+      const responseText = await getFinancialAdvice(text, {
+        stats,
+        subscriptions,
+        userProfile
+      });
       
       const botMsg: ChatMessage = {
         id: (Date.now() + 1).toString(),
@@ -88,6 +63,13 @@ const AICoach: React.FC = () => {
       setMessages(prev => [...prev, botMsg]);
     } catch (err) {
       console.error(err);
+      const errorMsg: ChatMessage = {
+        id: (Date.now() + 1).toString(),
+        role: 'model',
+        text: "I encountered an error retrieving your financial analysis. Please try again.",
+        timestamp: new Date()
+      };
+      setMessages(prev => [...prev, errorMsg]);
     } finally {
       setIsThinking(false);
     }
@@ -104,7 +86,7 @@ const AICoach: React.FC = () => {
           <div>
             <h3 className="font-bold text-white tracking-wide">AI Finance Coach</h3>
             <p className="text-xs text-blue-300 flex items-center font-medium mt-0.5">
-              <Sparkles className="h-3 w-3 mr-1" /> Emotionally Intelligent Mode
+              <Sparkles className="h-3 w-3 mr-1" /> Live Financial Context
             </p>
           </div>
         </div>
@@ -151,7 +133,7 @@ const AICoach: React.FC = () => {
 
         {/* Quick Actions */}
         <div className="p-4 border-t border-white/5 bg-slate-900/50 flex gap-2 overflow-x-auto">
-          {["How to save more?", "Analyze my expenses", "I'm feeling stressed about money"].map(q => (
+          {["Analyze my spending", "Am I over budget?", "Review my subscriptions"].map(q => (
              <button key={q} onClick={() => handleSend(q)} className="whitespace-nowrap px-4 py-2 bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-full text-sm text-blue-200 transition-colors">
                {q}
              </button>
